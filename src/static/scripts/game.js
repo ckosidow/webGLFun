@@ -115,8 +115,8 @@ function drawTriangle() {
     gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
 }
 
-function drawSquare(xPos) {
-    mat4.translate(mvMatrix, [xPos, 0.0, 0.0]);
+function drawSquare(xPos, yPos) {
+    mat4.translate(mvMatrix, [xPos, yPos, 0.0]);
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
@@ -157,9 +157,13 @@ function webGLStart() {
         drawTriangle();
 
         if (e.keyCode === 37) {
-            drawSquare(-2.0);
+            drawSquare(-2.0, 0.0);
+        } else if (e.keyCode === 38) {
+            drawSquare(0.0, 2.0);
         } else if (e.keyCode === 39) {
-            drawSquare(2.0);
+            drawSquare(2.0, 0.0);
+        } else if (e.keyCode === 40) {
+            drawSquare(0.0, -2.0);
         }
     });
 }
