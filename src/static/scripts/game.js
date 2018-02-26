@@ -6,16 +6,14 @@ var triangleVertexPositionBuffer;
 var squareVertexPositionBuffer;
 
 function initGL(canvas) {
-    try {
-        gl = canvas.getContext("experimental-webgl");
-        gl.viewportWidth = canvas.width;
-        gl.viewportHeight = canvas.height;
-    } catch (e) {
-        console.log("error: in initGL");
-    }
+    gl = canvas.getContext("webgl");
+    
     if (!gl) {
         alert("Could not initialise WebGL, sorry :-(");
     }
+
+    gl.viewportWidth = canvas.offsetWidth;
+    gl.viewportHeight = canvas.offsetHeight;
 }
 
 function getShader(gl, id) {
@@ -110,7 +108,7 @@ function initBuffers() {
 }
 
 function drawTriangle() {
-    mat4.translate(mvMatrix, [-7.2, 3.15, -10.0]);
+    mat4.translate(mvMatrix, [-7.2, 6.3, -20.0]);
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
@@ -134,7 +132,7 @@ function setView() {
 }
 
 function webGLStart() {
-    var canvas = document.getElementById("lesson01-canvas");
+    var canvas = document.getElementById("game-canvas");
     initGL(canvas);
     initShaders();
     initBuffers();
