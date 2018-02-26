@@ -148,4 +148,18 @@ function webGLStart() {
 
     drawTriangle();
     drawSquare(Math.random() + 2.0);
+
+    window.addEventListener('keyup', function (e) {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        mat4.identity(mvMatrix);
+
+        drawTriangle();
+
+        if (e.keyCode === 37) {
+            drawSquare(-2.0);
+        } else if (e.keyCode === 39) {
+            drawSquare(2.0);
+        }
+    });
 }
