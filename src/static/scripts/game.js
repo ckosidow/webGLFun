@@ -4,6 +4,7 @@ var mvMatrix = mat4.create();
 var pMatrix = mat4.create();
 var triangleVertexPositionBuffer;
 var squareVertexPositionBuffer;
+var squarePos = [0.0, 0.0, 0.0];
 
 function initGL(canvas) {
     gl = canvas.getContext("webgl");
@@ -32,6 +33,7 @@ function getShader(gl, id) {
         if (k.nodeType === 3) {
             str += k.textContent;
         }
+
         k = k.nextSibling;
     }
 
@@ -48,6 +50,7 @@ function getShader(gl, id) {
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
         alert(gl.getShaderInfoLog(shader));
+
         return null;
     }
 
@@ -55,12 +58,9 @@ function getShader(gl, id) {
 }
 
 function initShaders() {
-    var fragmentShader = getShader(gl, "shader-fs");
-    var vertexShader = getShader(gl, "shader-vs");
-
     shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
+    gl.attachShader(shaderProgram, getShader(gl, "shader-vs"));
+    gl.attachShader(shaderProgram, getShader(gl, "shader-fs"));
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
@@ -115,8 +115,13 @@ function drawTriangle() {
     gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
 }
 
-function drawSquare(xPos, yPos) {
-    mat4.translate(mvMatrix, [xPos, yPos, 0.0]);
+function moveSquare(xPos, yPos) {
+    squarePos[0] += xPos;
+    squarePos[1] += yPos;
+}
+
+function drawSquare() {
+    mat4.translate(mvMatrix, squarePos);
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
@@ -132,7 +137,9 @@ function setView() {
 }
 
 function webGLStart() {
+    var map = {}; // You could also use an array
     var canvas = document.getElementById("game-canvas");
+
     initGL(canvas);
     initShaders();
     initBuffers();
@@ -147,23 +154,33 @@ function webGLStart() {
     mat4.identity(mvMatrix);
 
     drawTriangle();
-    drawSquare(Math.random() + 2.0);
+    drawSquare(0.0, 0.0);
 
-    window.addEventListener('keyup', function (e) {
+    onkeydown = onkeyup = function(e) {
+        e = e || event; // to deal with IE
+        map[e.keyCode] = e.type == 'keydown';
+        /* insert conditional here */
+
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
         mat4.identity(mvMatrix);
 
-        drawTriangle();
-
-        if (e.keyCode === 37) {
-            drawSquare(-2.0, 0.0);
-        } else if (e.keyCode === 38) {
-            drawSquare(0.0, 2.0);
-        } else if (e.keyCode === 39) {
-            drawSquare(2.0, 0.0);
-        } else if (e.keyCode === 40) {
-            drawSquare(0.0, -2.0);
+        if (map[40] || map[83]) {
+            moveSquare(0.0, -0.1);
         }
-    });
+
+        if (map[39] || map[68]) {
+            moveSquare(0.1, 0.0);
+        }
+
+        if (map[38] || map[87]) {
+            moveSquare(0.0, 0.1);
+        }
+
+        if (map[37] || map[65]) {
+            moveSquare(-0.1, 0.0);
+        }
+
+        drawTriangle();
+        drawSquare();
+    }
 }
