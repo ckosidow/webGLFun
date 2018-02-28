@@ -5,6 +5,7 @@ var pMatrix = mat4.create();
 var triangleVertexPositionBuffer;
 var squareVertexPositionBuffer;
 var squarePos = [0.0, 0.0, 0.0];
+var keyMap = [];
 
 function initGL(canvas) {
     gl = canvas.getContext("webgl");
@@ -137,7 +138,6 @@ function setView() {
 }
 
 function webGLStart() {
-    var map = {}; // You could also use an array
     var canvas = document.getElementById("game-canvas");
 
     initGL(canvas);
@@ -156,31 +156,39 @@ function webGLStart() {
     drawTriangle();
     drawSquare(0.0, 0.0);
 
-    onkeydown = onkeyup = function(e) {
-        e = e || event; // to deal with IE
-        map[e.keyCode] = e.type == 'keydown';
-        /* insert conditional here */
+    onkeydown = keyHandler;
+    onkeyup = keyHandler;
 
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        mat4.identity(mvMatrix);
+    gameLoop();
+}
 
-        if (map[40] || map[83]) {
-            moveSquare(0.0, -0.1);
-        }
+function keyHandler(e) {
+    e = e || event;
+    keyMap[e.keyCode] = e.type === 'keydown';
+}
 
-        if (map[39] || map[68]) {
-            moveSquare(0.1, 0.0);
-        }
+function gameLoop() {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    mat4.identity(mvMatrix);
 
-        if (map[38] || map[87]) {
-            moveSquare(0.0, 0.1);
-        }
-
-        if (map[37] || map[65]) {
-            moveSquare(-0.1, 0.0);
-        }
-
-        drawTriangle();
-        drawSquare();
+    if (keyMap[40] || keyMap[83]) {
+        moveSquare(0.0, -0.1);
     }
+
+    if (keyMap[39] || keyMap[68]) {
+        moveSquare(0.1, 0.0);
+    }
+
+    if (keyMap[38] || keyMap[87]) {
+        moveSquare(0.0, 0.1);
+    }
+
+    if (keyMap[37] || keyMap[65]) {
+        moveSquare(-0.1, 0.0);
+    }
+
+    drawTriangle();
+    drawSquare();
+
+    setTimeout(gameLoop, 10);
 }
