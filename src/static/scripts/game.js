@@ -1,11 +1,11 @@
-var gl;
-var shaderProgram;
-var mvMatrix = mat4.create();
-var pMatrix = mat4.create();
-var triangleVertexPositionBuffer;
-var squareVertexPositionBuffer;
-var squarePos = [0.0, 0.0, 0.0];
-var keyMap = [];
+const mvMatrix = mat4.create();
+const pMatrix = mat4.create();
+const squarePos = [0.0, 0.0, 0.0];
+const keyMap = [];
+let gl;
+let shaderProgram;
+let triangleVertexPositionBuffer;
+let squareVertexPositionBuffer;
 
 function initGL(canvas) {
     gl = canvas.getContext("webgl");
@@ -19,10 +19,10 @@ function initGL(canvas) {
 }
 
 function getShader(gl, id) {
-    var shaderScript = document.getElementById(id);
-    var str = "";
-    var k;
-    var shader;
+    const shaderScript = document.getElementById(id);
+    let str = "";
+    let k;
+    let shader;
 
     if (!shaderScript) {
         return null;
@@ -83,12 +83,12 @@ function setMatrixUniforms() {
 }
 
 function initBuffers() {
-    var triangleVertices = [
+    const triangleVertices = [
         0.0, 1.0, 0.0,
         -1.0, -1.0, 0.0,
         1.0, -1.0, 0.0
     ];
-    var squareVertices = [
+    const squareVertices = [
         1.0, 1.0, 0.0,
         -1.0, 1.0, 0.0,
         1.0, -1.0, 0.0,
@@ -138,7 +138,7 @@ function setView() {
 }
 
 function webGLStart() {
-    var canvas = document.getElementById("game-canvas");
+    const canvas = document.getElementById("game-canvas");
 
     initGL(canvas);
     initShaders();
