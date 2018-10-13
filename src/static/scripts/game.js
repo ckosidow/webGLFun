@@ -1,11 +1,51 @@
 const mvMatrix = mat4.create();
 const pMatrix = mat4.create();
-const squarePos = [0.0, 0.0, 0.0];
 const keyMap = [];
+let player = null;
+let worldObjects = [];
 let gl;
 let shaderProgram;
 let triangleVertexPositionBuffer;
-let squareVertexPositionBuffer;
+
+class WorldObject {
+    constructor(position, vertices) {
+        this.position = position;
+        this.vertices = vertices;
+    }
+
+    applyGravity() {
+
+    }
+
+    initBuffer(itemSize, numItems) {
+        this.vertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+        this.vertexPositionBuffer.itemSize = itemSize;
+        this.vertexPositionBuffer.numItems = numItems;
+    }
+
+    drawTriangle() {
+        mat4.translate(mvMatrix, this.position);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        setMatrixUniforms();
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertexPositionBuffer.numItems);
+    }
+
+    drawSquare() {
+        mat4.translate(mvMatrix, this.position);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        setMatrixUniforms();
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.vertexPositionBuffer.numItems);
+    }
+
+    move(xPos, yPos) {
+        this.position[0] += xPos;
+        this.position[1] += yPos;
+    }
+}
 
 function initGL(canvas) {
     gl = canvas.getContext("webgl");
@@ -82,53 +122,6 @@ function setMatrixUniforms() {
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
 }
 
-function initBuffers() {
-    const triangleVertices = [
-        0.0, 1.0, 0.0,
-        -1.0, -1.0, 0.0,
-        1.0, -1.0, 0.0
-    ];
-    const squareVertices = [
-        1.0, 1.0, 0.0,
-        -1.0, 1.0, 0.0,
-        1.0, -1.0, 0.0,
-        -1.0, -1.0, 0.0
-    ];
-
-    triangleVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
-    triangleVertexPositionBuffer.itemSize = 3;
-    triangleVertexPositionBuffer.numItems = 3;
-
-    squareVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(squareVertices), gl.STATIC_DRAW);
-    squareVertexPositionBuffer.itemSize = 3;
-    squareVertexPositionBuffer.numItems = 4;
-}
-
-function drawTriangle() {
-    mat4.translate(mvMatrix, [-7.2, 6.3, -20.0]);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-    setMatrixUniforms();
-    gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
-}
-
-function moveSquare(xPos, yPos) {
-    squarePos[0] += xPos;
-    squarePos[1] += yPos;
-}
-
-function drawSquare() {
-    mat4.translate(mvMatrix, squarePos);
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-    setMatrixUniforms();
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
-}
-
 function setBackground() {
     gl.clearColor(0.2, 0.0, 0.0, 1.0);
 }
@@ -139,10 +132,26 @@ function setView() {
 
 function webGLStart() {
     const canvas = document.getElementById("game-canvas");
+    const triangle = new WorldObject([-7.2, 6.3, -20.0], [
+        0.0, 1.0, 0.0,
+        -1.0, -1.0, 0.0,
+        1.0, -1.0, 0.0
+    ]);
+
+    player = new WorldObject([0.0, 0.0, 0.0], [
+        1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, -1.0, 0.0
+    ]);
 
     initGL(canvas);
     initShaders();
-    initBuffers();
+
+    triangle.initBuffer(3, 3);
+    player.initBuffer(3, 4);
+
+    worldObjects.push(triangle);
 
     setBackground();
     gl.enable(gl.DEPTH_TEST);
@@ -152,9 +161,6 @@ function webGLStart() {
     setView();
 
     mat4.identity(mvMatrix);
-
-    drawTriangle();
-    drawSquare(0.0, 0.0);
 
     onkeydown = keyHandler;
     onkeyup = keyHandler;
@@ -172,23 +178,26 @@ function gameLoop() {
     mat4.identity(mvMatrix);
 
     if (keyMap[40] || keyMap[83]) {
-        moveSquare(0.0, -0.1);
+        player.move(0.0, -0.1);
     }
 
     if (keyMap[39] || keyMap[68]) {
-        moveSquare(0.1, 0.0);
+        player.move(0.1, 0.0);
     }
 
     if (keyMap[38] || keyMap[87]) {
-        moveSquare(0.0, 0.1);
+        player.move(0.0, 0.1);
     }
 
     if (keyMap[37] || keyMap[65]) {
-        moveSquare(-0.1, 0.0);
+        player.move(-0.1, 0.0);
     }
 
-    drawTriangle();
-    drawSquare();
+    for (var obj of worldObjects) {
+        obj.drawTriangle();
+    }
 
-    setTimeout(gameLoop, 10);
+    player.drawSquare();
+
+    setTimeout(gameLoop, 13);
 }
